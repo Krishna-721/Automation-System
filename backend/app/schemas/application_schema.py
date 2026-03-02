@@ -22,3 +22,8 @@ class JobApplicationResponse(JobApplicationBase):
 
     class Config:
         from_attributes = True
+
+class EmailInput(BaseModel):
+    subject: str
+    body: str
+    sender: str
