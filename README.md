@@ -1,7 +1,7 @@
-# Email Automation System 
+# Tracker
 
 ### Main Idea: 
- To reduce the hassle of filtering out job related mails from your inbox. This project provides you a unified platform with gmail integration where you can easily find the mails.
+To reduce the hassle of filtering out job related mails from your inbox. This project provides you a unified platform with gmail integration where you can easily find the mails.
 
 ## Current progress 
  Developing this project using Python, fast-api, postgresql 
