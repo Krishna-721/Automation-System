@@ -4,8 +4,8 @@ from datetime import datetime
 
 
 class JobApplicationBase(BaseModel):
-    company: str
-    role: str
+    company: Optional[str] = None
+    role: Optional[str] = None
     status: Optional[str] = "applied"
     source: Optional[str] = None
     notes: Optional[str] = None
@@ -17,6 +17,7 @@ class JobApplicationCreate(JobApplicationBase):
 
 class JobApplicationResponse(JobApplicationBase):
     id: int
+    subject: Optional[str]=None
     created_at: datetime
     updated_at: datetime
 

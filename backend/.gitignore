@@ -62,3 +62,11 @@ desktop.ini
 
 # Docker
 *.env.local
+
+# ml
+ml/model.pkl
+ml/vectorizer.pkl
+ml/training_data.csv
+
+# migration
+alembic/versions/

@@ -6,11 +6,11 @@ class JobApplication(Base):
     __tablename__ = "job_applications"
 
     id = Column(Integer, primary_key=True, index=True)
-    company = Column(String(255), nullable=False)
-    role = Column(String(255), nullable=False)
+    company = Column(String(255), nullable=True)
+    role = Column(String(255), nullable=True)
     status = Column(String(100), default="applied")
     source = Column(String(100), nullable=True)
-
+    subject=Column(String(500),nullable=True)
     notes = Column(Text, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
