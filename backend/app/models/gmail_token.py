@@ -6,6 +6,7 @@ class GmailToken(Base):
     __tablename__ = "gmail_tokens"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id=Column(String(255), nullable=False, unique=True)
     token = Column(Text, nullable=False)
     refresh_token = Column(Text, nullable=False)
     token_uri = Column(Text, nullable=False)

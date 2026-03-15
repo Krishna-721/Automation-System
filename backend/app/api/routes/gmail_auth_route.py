@@ -1,3 +1,6 @@
+import os
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import RedirectResponse
 from google_auth_oauthlib.flow import Flow
@@ -8,9 +11,18 @@ from app.db.postgres import get_db
 from app.core.config import settings
 from app.models.gmail_token import GmailToken
 
+from google.oauth2 import id_token
+from google.auth.transport import requests as grequests
+
 router = APIRouter()
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+]
+
+_flow_store = {}
 
 CLIENT_CONFIG = {
     "web": {
@@ -25,29 +37,31 @@ CLIENT_CONFIG = {
 @router.get("/auth/gmail/login")
 async def gmail_login():
     flow = Flow.from_client_config(
-        CLIENT_CONFIG,
-        scopes=SCOPES,
-        redirect_uri=settings.GOOGLE_REDIRECT_URI,
+        CLIENT_CONFIG, scopes=SCOPES, redirect_uri=settings.GOOGLE_REDIRECT_URI,
     )
-    auth_url, _ = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent",
+    auth_url, state = flow.authorization_url(
+        access_type="offline", prompt="consent",
     )
+    _flow_store[state] = flow.code_verifier
     return RedirectResponse(auth_url)
 
 
 @router.get("/auth/gmail/callback")
 async def gmail_callback(request: Request, db: AsyncSession = Depends(get_db)):
+    state = request.query_params.get("state")
     flow = Flow.from_client_config(
-        CLIENT_CONFIG,
-        scopes=SCOPES,
-        redirect_uri=settings.GOOGLE_REDIRECT_URI,
+        CLIENT_CONFIG, scopes=SCOPES,
+        redirect_uri=settings.GOOGLE_REDIRECT_URI, state=state,
     )
+    flow.code_verifier = _flow_store.pop(state, None)
     flow.fetch_token(authorization_response=str(request.url))
     credentials = flow.credentials
+    id_info = id_token.verify_oauth2_token(
+    credentials.id_token, grequests.Request(), settings.GOOGLE_CLIENT_ID)
+    user_email = id_info["email"]
 
     token = GmailToken(
+        user_id=user_email,
         token=credentials.token,
         refresh_token=credentials.refresh_token,
         token_uri=credentials.token_uri,
