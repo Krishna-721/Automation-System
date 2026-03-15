@@ -18,7 +18,7 @@ classifier that reads full email context, not just word presence.
 - **Backend** — Python, FastAPI, PostgreSQL (async SQLAlchemy)
 - **ML** — TF-IDF + Logistic Regression (scikit-learn)
 - **Testing** — pytest, httpx, NullPool isolation
-- **Planned** — Gmail API, OAuth 2.0, Docker, AWS EC2
+- **Planned** — Docker, AWS EC2
 
 ## Status
 - [x] FastAPI backend initialized
@@ -28,12 +28,16 @@ classifier that reads full email context, not just word presence.
 - [x] Email ingestion endpoint — POST /emails/process
 - [x] Analytics endpoint — GET /analytics/summary
 - [x] ML classifier — TF-IDF + Logistic Regression trained and wired in
+- [x] Pagination and status filtering on GET /applications/
+- [x] Confidence score on ML predictions
+- [x] Gmail OAuth 2.0 — connect your inbox via /auth/gmail/login
+- [x] Gmail sync — pull and classify emails via /gmail/sync
+- [x] Spam filter — job alerts and newsletters filtered before classification
 - [x] 8/8 tests passing with isolated test database
- ## WIP
-- [ ] HTML preprocessing — strip tags before classification
+
+## WIP
+- [ ] Expand training data — model currently at 44 samples, needs 150-200
 - [ ] NER — extract company and role from email body
-- [ ] Pagination and status filtering on GET /applications/
-- [ ] Gmail API + OAuth integration
 - [ ] Docker setup
 - [ ] AWS deployment
 
@@ -44,13 +48,11 @@ not production-ready. Known limitations:
 
 - Emails contain HTML tags, reply chains, signatures, and boilerplate
   footers that add noise to the classifier
-- No confidence score stored yet
-- company and role fields are extracted as "pending" — NER planned
-- Metrics (89% accuracy) are based on 9 test samples and are not
-  statistically reliable
+- company and role fields are not yet extracted — NER planned
+- Metrics are based on a small test set and are not statistically reliable
 
 ## How It Will Improve
-Every email synced via Gmail (wip) - becomes new training data.
+Every email synced via Gmail becomes new training data.
 As labeled emails accumulate the model will be retrained automatically.
 Target upgrade path: TF-IDF → fine-tuned DistilBERT at 500+ samples.
 
@@ -59,14 +61,18 @@ Target upgrade path: TF-IDF → fine-tuned DistilBERT at 500+ samples.
 git clone https://github.com/Krishna-721/tracker.git
 cd tracker/backend
 pip install -r requirements.txt
-cp .env.example .env   # fill in your PostgreSQL URL
+cp .env.example .env   # fill in your PostgreSQL URL and Google OAuth credentials
 python ml/train.py     # train the model
 uvicorn app.main:app --reload
 ```
 
 Visit `http://localhost:8000/docs` for the full API.
 
+### Connect Gmail
+1. Visit `http://localhost:8000/auth/gmail/login`
+2. Authenticate with your Google account
+3. Sync your inbox via `GET /gmail/sync?user_id=your@email.com`
+
 ---
 
-> Gmail integration and full automation coming soon!
-> Currently accepting manual email input via POST /emails/process.
+> Gmail OAuth is live. Connect via GET /auth/gmail/login then sync via GET /gmail/sync?user_id=your@email.com
